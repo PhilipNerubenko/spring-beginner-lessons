@@ -3,6 +3,7 @@
 ## Contents
 
 1. [Lesson 1: Spring Bean Configuration](#lesson-1-spring-bean-configuration)
+2. [Lesson 2: Aspect-Oriented Programming (AOP)](#lesson-2-aspect-oriented-programming-aop)
 
 ## Lesson 1: Spring Bean Configuration
 
@@ -99,6 +100,118 @@ The lesson code is available in these files:
 - Demo Classes:
   - [`SpringPersonDemo.java`](./spring_course/src/main/java/com/philip/spring/spring_course/spring_introduction/SpringPersonDemo.java)
   - [`SpringJavaConfigDemo.java`](./spring_course/src/main/java/com/philip/spring/spring_course/spring_introduction/SpringJavaConfigDemo.java)
+
+<div align="right">
+    <b><a href="#contents">↥ Back to Contents</a></b>
+</div>
+
+---
+
+## Lesson 2: Aspect-Oriented Programming (AOP)
+
+This lesson explores Spring AOP concepts and implementations, including:
+
+- Aspect creation and pointcut declarations
+- Different types of advice (@Before, @After, @Around)
+- Join points and method interception
+- Aspect ordering and combination
+
+### Key Concepts
+
+| Concept | Purpose | Example |
+|---------|----------|---------|
+| Aspect | Modularizes cross-cutting concerns | Logging, security checks |
+| Pointcut | Defines where aspects apply | Method execution patterns |
+| Advice | Defines aspect behavior and timing | Before/after method execution |
+| Join Point | Specific points in program execution | Method calls, exception handling |
+
+### Implementation Examples
+
+#### 1. Basic Aspect Definition
+
+```java
+@Component
+@Aspect
+public class LoggingAspect {
+    @Before("execution(public void getBook())")
+    public void beforeGetBookAdvice() {
+        System.out.println("Attempting to get book...");
+    }
+}
+```
+
+#### 2. Around Advice with Exception Handling
+
+```java
+@Around("execution(* returnBook())")
+public Object aroundReturnBookLoggingAdvice(ProceedingJoinPoint point) throws Throwable {
+    System.out.println("Attempting to return book...");
+    try {
+        Object result = point.proceed();
+        return result;
+    } catch (Exception e) {
+        System.out.println("Exception caught: " + e);
+        throw e;
+    }
+}
+```
+
+#### 3. Ordered Aspects with Join Points
+
+```java
+@Component
+@Aspect
+@Order(20)
+public class SecurityAspect {
+    @Before("com.philip.spring.spring_course.aop.aspects.MyPointcuts.allAddMethods()")
+    public void beforeAddSecurityAdvice() {
+        System.out.println("Performing security check...");
+    }
+}
+```
+
+### Project Structure
+
+The AOP implementation is organized in the following packages:
+
+- **Aspects** ([`/aspects`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/aspects)):
+  - [`LoggingAspect.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/aspects/LoggingAspect.java) - Basic logging advice
+  - [`AroundLoggingAspect.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/aspects/AroundLoggingAspect.java) - Around method execution logging
+  - [`SecurityAspect.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/aspects/SecurityAspectOrderExecutingAndJoinPoint.java) - Security checks
+  - [`UniversityLoggingAspect.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/aspects/UniversityLoggingAspect.java) - Complex logging scenarios
+
+- **Core Classes**:
+  - [`UniLibrary.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/UniLibrary.java) - Main business logic
+  - [`Book.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/Book.java) - Domain model
+  - [`Student.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/Student.java) - Domain model
+  - [`University.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/University.java) - Business logic
+
+- **Demo Classes**:
+  - [`Test1.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/Test1.java) - Basic AOP demos
+  - [`Test2.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/Test2.java) - Exception handling demos
+  - [`Test3.java`](./spring_course/src/main/java/com/philip/spring/spring_course/aop/Test3.java) - Around advice demos
+
+### Common AOP Annotations
+
+| Annotation | Purpose | Example Usage |
+|------------|---------|---------------|
+| `@Aspect` | Declares an aspect class | `@Aspect public class LoggingAspect {}` |
+| `@Before` | Executes before method | `@Before("execution(* getBook())")` |
+| `@After` | Executes after method | `@After("execution(* returnBook())")` |
+| `@Around` | Wraps method execution | `@Around("execution(* returnBook())")` |
+| `@Order` | Sets aspect precedence | `@Order(20)` |
+
+### Configuration
+
+Enable AOP support using Java configuration:
+
+```java
+@Configuration
+@EnableAspectJAutoProxy
+@ComponentScan("com.philip.spring.spring_course.aop")
+public class MyConfig {
+}
+```
 
 <div align="right">
     <b><a href="#contents">↥ Back to Contents</a></b>
