@@ -161,12 +161,27 @@ public Object aroundReturnBookLoggingAdvice(ProceedingJoinPoint point) throws Th
 ```java
 @Component
 @Aspect
-@Order(20)
+@Order(10)
 public class SecurityAspect {
     @Before("com.philip.spring.spring_course.aop.aspects.MyPointcuts.allAddMethods()")
-    public void beforeAddSecurityAdvice() {
-        System.out.println("Performing security check...");
+    public void beforeAddLoggingAdvice(JoinPoint joinPoint) {
+    MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+
+    if (methodSignature.getName().equals("addBook")) {
+      Object[] args = joinPoint.getArgs();
+      for (Object arg : args) {
+        if (arg instanceof Book) {
+          Book book = (Book) arg;
+          System.out.println("Book information: name - " + book.getName() + ", author - "
+              + book.getAuthor() + ", year - " + book.getYearOfPublication());
+        } else if (arg instanceof String) {
+          System.out.println("Book add: " + arg);
+        }
+      }
     }
+
+    System.out.println("Executing beforeAddLoggingAdvice");
+  }
 }
 ```
 
