@@ -233,3 +233,140 @@ public class MyConfig {
 </div>
 
 ---
+
+## Lesson 3: Hibernate ORM Basics
+
+This lesson introduces Hibernate ORM concepts and practical implementations:
+
+- Entity mapping and configuration
+- Relationships: One-to-One, One-to-Many, Many-to-Many
+- Session management and transactions
+- Basic CRUD operations
+
+### Key Concepts
+
+| Concept        | Purpose                          | Example Use Case         |
+|----------------|----------------------------------|-------------------------|
+| Entity         | Maps Java class to DB table      | `@Entity class Student` |
+| Session        | Manages DB operations            | `session.save(entity)`  |
+| Transaction    | Ensures atomic operations        | `session.beginTransaction()` |
+| Relationship   | Links entities                   | One-to-Many, Many-to-Many |
+
+### Implementation Examples
+
+#### 1. Entity Definition
+
+```java
+@Entity
+@Table(name = "students")
+public class Student {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String name;
+    private int age;
+}
+```
+
+#### 2. One-to-One Relationship
+
+```java
+@Entity
+public class Employee {
+    @Id
+    private int id;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "detail_id")
+    private EmployeeDetail detail;
+}
+```
+
+#### 3. One-to-Many Relationship
+
+```java
+@Entity
+public class Department {
+    @Id
+    private int id;
+
+    @OneToMany(mappedBy = "department")
+    private List<Employee> employees;
+}
+```
+
+#### 4. Many-to-Many Relationship
+
+```java
+@Entity
+public class Child {
+    @Id
+    private int id;
+
+    @ManyToMany
+    @JoinTable(
+        name = "child_section",
+        joinColumns = @JoinColumn(name = "child_id"),
+        inverseJoinColumns = @JoinColumn(name = "section_id")
+    )
+    private List<Section> sections;
+}
+```
+
+### Project Structure
+
+Hibernate lessons are organized in these packages:
+
+- **One-to-One** ([`hibernate_one_to_one`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_one)):
+  - Entity: [`Employee.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_one/entity/Employee.java)
+  - Entity: [`EmployeeDetail.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_one/entity/EmployeeDetail.java)
+  - Demo: [`Test1.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_one/Test1.java)
+  - Demo: [`Test2.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_one/Test2.java)
+
+- **One-to-Many (Unidirectional)** ([`hibernate_one_to_many_uni`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_many_uni)):
+  - Entity: [`Department.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_many_uni/entity/Department.java)
+  - Entity: [`Employee.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_many_uni/entity/Employee.java)
+  - Demo: [`Test1.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_many_uni/Test1.java)
+
+- **One-to-Many (Bidirectional)** ([`hibernate_one_to_many_bi`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_many_bi)):
+  - Entity: [`Department.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_many_bi/entity/Department.java)
+  - Entity: [`Employee.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_many_bi/entity/Employee.java)
+  - Demo: [`Test1.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_one_to_many_bi/Test1.java)
+
+- **Many-to-Many** ([`hibernate_many_to_many`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_many_to_many)):
+  - Entity: [`Child.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_many_to_many/entity/Child.java)
+  - Entity: [`Section.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_many_to_many/entity/Section.java)
+  - Demo: [`Test.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_many_to_many/Test.java)
+
+- **General Hibernate Tests** ([`hibernate_test`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_test)):
+  - Demo: [`Test1.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_test/Test1.java)
+  - Demo: [`Test2.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_test/Test2.java)
+  - Demo: [`Test3.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_test/Test3.java)
+  - Demo: [`Test4.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_test/Test4.java)
+  - Demo: [`Test5.java`](./spring_course/src/main/java/com/philip/spring/spring_course/hibernate_test/Test5.java)
+
+### Configuration
+
+Hibernate configuration is provided in:
+
+- [`hibernate.cfg.xml`](./spring_course/src/main/resources/hibernate.cfg.xml)
+
+Example usage:
+
+```java
+SessionFactory factory = new Configuration()
+    .configure("hibernate.cfg.xml")
+    .addAnnotatedClass(Student.class)
+    .buildSessionFactory();
+
+Session session = factory.getCurrentSession();
+session.beginTransaction();
+// ... perform operations ...
+session.getTransaction().commit();
+```
+
+<div align="right">
+    <b><a href="#contents">↥ Back to Contents</a></b>
+</div>
+
