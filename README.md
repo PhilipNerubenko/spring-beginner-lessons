@@ -4,6 +4,8 @@
 
 1. [Lesson 1: Spring Bean Configuration](#lesson-1-spring-bean-configuration)
 2. [Lesson 2: Aspect-Oriented Programming (AOP)](#lesson-2-aspect-oriented-programming-aop)
+3. [Lesson 3: Hibernate ORM Basics](#lesson-3-hibernate-orm-basics)
+4. [Lesson 4: Spring MVC Fundamentals](#lesson-4-spring-mvc-fundamentals)
 
 ## Lesson 1: Spring Bean Configuration
 
@@ -370,3 +372,145 @@ session.getTransaction().commit();
     <b><a href="#contents">↥ Back to Contents</a></b>
 </div>
 
+## Lesson 4: Spring MVC Fundamentals
+
+This lesson covers Spring MVC framework concepts and implementations:
+
+- MVC architecture pattern
+- Controllers and request mapping
+- Form handling and validation
+- View resolvers and JSP pages
+- Data binding
+
+### Key Concepts
+
+| Concept | Purpose | Example |
+|---------|---------|---------|
+| Controller | Handles web requests | `@Controller class MyController` |
+| View | Renders the response | JSP pages, Thymeleaf templates |
+| Model | Holds data between controller and view | `model.addAttribute("user", user)` |
+| Validation | Ensures data integrity | `@Valid @ModelAttribute Employee employee` |
+
+### Implementation Examples
+
+#### 1. Basic Controller
+
+```java
+@Controller
+public class MyController {
+    
+    @RequestMapping("/")
+    public String showFirstView() {
+        return "first-view";
+    }
+    
+    @RequestMapping("/askDetails")
+    public String askEmployeeDetails(Model model) {
+        model.addAttribute("employee", new Employee());
+        return "ask-emp-details-view";
+    }
+}
+```
+
+#### 2. Form Processing with Validation
+
+```java
+@Entity
+public class Employee {
+    @Size(min = 2, message = "Name must be at least 2 characters long")
+    private String name;
+    
+    @Min(value = 500, message = "Must be greater than 499")
+    @Max(value = 1000, message = "Must be less than 1001")
+    private int salary;
+    
+    @CheckEmail(value = "abc.com", message = "Email must end with abc.com")
+    private String email;
+}
+```
+
+#### 3. Custom Validation Annotation
+
+```java
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = CheckEmailValidator.class)
+public @interface CheckEmail {
+    public String value() default "xyz.com";
+    public String message() default "email must ends with xyz.com";
+}
+```
+
+### Project Structure
+
+The MVC implementation is organized in these packages:
+
+- **Controller** ([`mvc`](./spring_course_mvc/src/main/java/com/philipnerubenko/spring/mvc/)):
+  - [`MyController.java`](./spring_course_mvc/src/main/java/com/philipnerubenko/spring/mvc/MyController.java) - Main controller
+  - [`Employee.java`](./spring_course_mvc/src/main/java/com/philipnerubenko/spring/mvc/Employee.java) - Model class
+
+- **Validation** ([`validation`](./spring_course_mvc/src/main/java/com/philipnerubenko/spring/mvc/validation/)):
+  - [`CheckEmail.java`](./spring_course_mvc/src/main/java/com/philipnerubenko/spring/mvc/validation/CheckEmail.java) - Custom annotation
+  - [`CheckEmailValidator.java`](./spring_course_mvc/src/main/java/com/philipnerubenko/spring/mvc/validation/CheckEmailValidator.java) - Validator implementation
+
+- **Views** ([`WEB-INF/view`](./spring_course_mvc/src/main/webapp/WEB-INF/view/)):
+  - [`first-view.jsp`](./spring_course_mvc/src/main/webapp/WEB-INF/view/first-view.jsp) - Welcome page
+  - [`ask-emp-details-view.jsp`](./spring_course_mvc/src/main/webapp/WEB-INF/view/ask-emp-details-view.jsp) - Employee form
+  - [`show-emp-details-view.jsp`](./spring_course_mvc/src/main/webapp/WEB-INF/view/show-emp-details-view.jsp) - Result page
+
+### Configuration Files
+
+- [`web.xml`](./spring_course_mvc/src/main/webapp/WEB-INF/web.xml) - Servlet configuration
+- [`applicationContext.xml`](./spring_course_mvc/src/main/webapp/WEB-INF/applicationContext.xml) - Spring configuration
+
+Example web.xml configuration:
+
+```xml
+<servlet>
+    <servlet-name>dispatcher</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>/WEB-INF/applicationContext.xml</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+</servlet>
+
+<servlet-mapping>
+    <servlet-name>dispatcher</servlet-name>
+    <url-pattern>/</url-pattern>
+</servlet-mapping>
+```
+
+### Form Processing Example
+
+```jsp
+<!-- ask-emp-details-view.jsp -->
+<form:form action="showDetails" modelAttribute="employee">
+    Name <form:input path="name"/>
+    <form:errors path="name"/>
+    <br><br>
+    Salary <form:input path="salary"/>
+    <form:errors path="salary"/>
+    <br><br>
+    Email <form:input path="email"/>
+    <form:errors path="email"/>
+    <br><br>
+    <input type="submit" value="OK">
+</form:form>
+```
+
+```java
+@RequestMapping("/showDetails")
+public String showEmployeeDetails(@Valid @ModelAttribute("employee") Employee emp,
+                                BindingResult bindingResult) {
+    if (bindingResult.hasErrors()) {
+        return "ask-emp-details-view";
+    }
+    return "show-emp-details-view";
+}
+```
+
+<div align="right">
+    <b><a href="#contents">↥ Back to Contents</a></b>
+</div>
