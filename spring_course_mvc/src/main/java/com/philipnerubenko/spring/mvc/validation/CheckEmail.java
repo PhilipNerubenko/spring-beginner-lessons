@@ -11,9 +11,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = CheckEmailValidator.class)
 public @interface CheckEmail {
-    public String value() default "xyz.com";
-    public String message() default "email must ends xyz.com";
-    
-    public Class<?>[] groups() default {};
-    public Class<? extends Payload>[] payload() default {};
+  public String value() default "xyz.com";
+  public String message() default "email must ends xyz.com";
+
+  public Class<?>[] groups() default {};
+  public Class<? extends Payload>[] payload() default {};
 }

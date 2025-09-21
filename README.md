@@ -6,6 +6,7 @@
 2. [Lesson 2: Aspect-Oriented Programming (AOP)](#lesson-2-aspect-oriented-programming-aop)
 3. [Lesson 3: Hibernate ORM Basics](#lesson-3-hibernate-orm-basics)
 4. [Lesson 4: Spring MVC Fundamentals](#lesson-4-spring-mvc-fundamentals)
+5. [Lesson 5: Spring MVC + Hibernate + AOP Integration](#lesson-5-spring-mvc--hibernate--aop-integration)
 
 ## Lesson 1: Spring Bean Configuration
 
@@ -510,6 +511,281 @@ public String showEmployeeDetails(@Valid @ModelAttribute("employee") Employee em
     return "show-emp-details-view";
 }
 ```
+
+<div align="right">
+    <b><a href="#contents">↥ Back to Contents</a></b>
+</div>
+
+## Lesson 5: Spring MVC + Hibernate + AOP Integration
+
+This lesson demonstrates how to combine Spring MVC, Hibernate, and AOP in a single web application:
+
+- Complete CRUD operations
+- Transaction management
+- Aspect logging
+- Service layer implementation
+- DAO pattern
+
+### Key Concepts
+
+| Concept | Purpose | Example |
+|---------|---------|---------|
+| Service Layer | Business logic implementation | `@Service class EmployeeServiceImpl` |
+| DAO Layer | Database operations | `@Repository class EmployeeDAOImpl` |
+| Transaction | Data consistency | `@Transactional` |
+| Aspect | Cross-cutting concerns | Logging, performance monitoring |
+
+### Project Architecture
+
+```
+Controller Layer (MVC)
+      ↓
+Service Layer (Business Logic)
+      ↓
+   DAO Layer
+      ↓
+Database (Hibernate)
+
+Cross-cutting: AOP Aspects
+```
+
+### Implementation Examples
+
+#### 1. Entity Class
+
+```java
+@Entity
+@Table(name = "employees")
+public class Employee {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    
+    @Column(name = "name")
+    private String name;
+    
+    @Column(name = "surname")
+    private String surname;
+    
+    @Column(name = "department")
+    private String department;
+    
+    @Column(name = "salary")
+    private int salary;
+    
+    // Getters and setters
+}
+```
+
+#### 2. DAO Layer Implementation
+
+```java
+@Repository
+public class EmployeeDAOImpl implements EmployeeDAO {
+    
+    @Autowired
+    private SessionFactory sessionFactory;
+    
+    @Override
+    public List<Employee> getAllEmployees() {
+        Session session = sessionFactory.getCurrentSession();
+        return session.createQuery("from Employee", Employee.class).getResultList();
+    }
+    
+    @Override
+    public void saveEmployee(Employee employee) {
+        Session session = sessionFactory.getCurrentSession();
+        session.saveOrUpdate(employee);
+    }
+}
+```
+
+#### 3. Service Layer Implementation
+
+```java
+@Service
+public class EmployeeServiceImpl implements EmployeeService {
+    
+    @Autowired
+    private EmployeeDAO employeeDAO;
+    
+    @Override
+    @Transactional
+    public List<Employee> getAllEmployees() {
+        return employeeDAO.getAllEmployees();
+    }
+    
+    @Override
+    @Transactional
+    public void saveEmployee(Employee employee) {
+        employeeDAO.saveEmployee(employee);
+    }
+}
+```
+
+#### 4. Controller Implementation
+
+```java
+@Controller
+public class EmployeeController {
+    
+    @Autowired
+    private EmployeeService employeeService;
+    
+    @RequestMapping("/")
+    public String showAllEmployees(Model model) {
+        List<Employee> allEmployees = employeeService.getAllEmployees();
+        model.addAttribute("allEmps", allEmployees);
+        return "all-employees";
+    }
+    
+    @RequestMapping("/addEmployee")
+    public String addEmployee(Model model) {
+        Employee employee = new Employee();
+        model.addAttribute("employee", employee);
+        return "employee-info";
+    }
+}
+```
+
+#### 5. AOP Logging Aspect
+
+```java
+@Component
+@Aspect
+public class LoggingAspect {
+    
+    private static final Logger logger = Logger.getLogger(LoggingAspect.class.getName());
+    
+    @Around("execution(* com.philipnerubenko.spring.service.*.*(..))")
+    public Object aroundAllServiceMethods(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+        String methodName = proceedingJoinPoint.getSignature().getName();
+        logger.info("Begin method: " + methodName);
+        
+        Object result = proceedingJoinPoint.proceed();
+        
+        logger.info("End method: " + methodName);
+        return result;
+    }
+}
+```
+
+### Configuration
+
+#### 1. Database Configuration (applicationContext.xml)
+
+```xml
+<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+      destroy-method="close">
+    <property name="driverClass" value="com.mysql.cj.jdbc.Driver"/>
+    <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/my_db?useSSL=false&amp;serverTimezone=UTC"/>
+    <property name="user" value="bestuser"/>
+    <property name="password" value="bestuser"/>
+</bean>
+
+<bean id="sessionFactory"
+      class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+    <property name="dataSource" ref="dataSource"/>
+    <property name="packagesToScan" value="com.philipnerubenko.spring.entity"/>
+    <property name="hibernateProperties">
+        <props>
+            <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+            <prop key="hibernate.show_sql">true</prop>
+        </props>
+    </property>
+</bean>
+```
+
+#### 2. Transaction Management
+
+```xml
+<bean id="transactionManager"
+      class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+    <property name="sessionFactory" ref="sessionFactory"/>
+</bean>
+
+<tx:annotation-driven transaction-manager="transactionManager"/>
+```
+
+### View Templates
+
+#### 1. all-employees.jsp
+
+```jsp
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<!DOCTYPE html>
+<html>
+<body>
+<h2>All Employees</h2>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Surname</th>
+        <th>Department</th>
+        <th>Salary</th>
+        <th>Operations</th>
+    </tr>
+    <c:forEach var="emp" items="${allEmps}">
+        <tr>
+            <td>${emp.name}</td>
+            <td>${emp.surname}</td>
+            <td>${emp.department}</td>
+            <td>${emp.salary}</td>
+            <td>
+                <input type="button" value="Update"
+                    onclick="window.location.href='updateInfo?empId=${emp.id}'"/>
+                <input type="button" value="Delete"
+                    onclick="window.location.href='deleteEmployee?empId=${emp.id}'"/>
+            </td>
+        </tr>
+    </c:forEach>
+</table>
+</body>
+</html>
+```
+
+### Project Structure
+
+The integrated implementation is organized in these packages:
+
+- **Controller** ([`controller`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/controller/)):
+  - [`EmployeeController.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/controller/EmployeeController.java)
+
+- **Service** ([`service`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/service/)):
+  - [`EmployeeService.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/service/EmployeeService.java)
+  - [`EmployeeServiceImpl.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/service/EmployeeServiceImpl.java)
+
+- **DAO** ([`dao`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/dao/)):
+  - [`EmployeeDAO.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/dao/EmployeeDAO.java)
+  - [`EmployeeDAOImpl.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/dao/EmployeeDAOImpl.java)
+
+- **Entity** ([`entity`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/entity/)):
+  - [`Employee.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/entity/Employee.java)
+
+- **Aspect** ([`aspect`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/aspect/)):
+  - [`LoggingAspect.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/aspect/LoggingAspect.java)
+
+### Key Features
+
+1. **Layered Architecture**
+   - Clear separation of concerns
+   - Maintainable and testable code
+   - Scalable structure
+
+2. **Transaction Management**
+   - Declarative transactions with `@Transactional`
+   - Automatic rollback on exceptions
+   - Transaction consistency
+
+3. **AOP Integration**
+   - Method execution logging
+   - Performance monitoring
+   - Exception handling
+
+4. **Database Operations**
+   - Connection pooling with C3P0
+   - Hibernate ORM integration
+   - CRUD operations
 
 <div align="right">
     <b><a href="#contents">↥ Back to Contents</a></b>
