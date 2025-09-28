@@ -7,6 +7,7 @@
 3. [Lesson 3: Hibernate ORM Basics](#lesson-3-hibernate-orm-basics)
 4. [Lesson 4: Spring MVC Fundamentals](#lesson-4-spring-mvc-fundamentals)
 5. [Lesson 5: Spring MVC + Hibernate + AOP Integration](#lesson-5-spring-mvc--hibernate--aop-integration)
+6. [Lesson 6: Spring REST API Development](#lesson-6-spring-rest-api-development)
 
 ## Lesson 1: Spring Bean Configuration
 
@@ -786,6 +787,217 @@ The integrated implementation is organized in these packages:
    - Connection pooling with C3P0
    - Hibernate ORM integration
    - CRUD operations
+
+<div align="right">
+    <b><a href="#contents">↥ Back to Contents</a></b>
+</div>
+
+## Lesson 6: Spring REST API Development
+
+This lesson covers REST API development with Spring:
+
+- REST principles and architecture
+- JSON data format
+- Client-server communication
+- Exception handling
+- REST client implementation
+
+### Key Concepts
+
+| Concept | Purpose | Example |
+|---------|---------|---------|
+| REST Controller | Handles HTTP requests | `@RestController` |
+| RequestMapping | Maps URLs to methods | `@GetMapping("/api/employees")` |
+| ResponseEntity | Customizes HTTP response | `ResponseEntity<Employee>` |
+| RestTemplate | Makes HTTP requests | `restTemplate.getForObject()` |
+
+### Server-Side Implementation
+
+#### 1. REST Controller
+
+```java
+@RestController
+@RequestMapping("/api")
+public class EmployeeRestController {
+    
+    @Autowired
+    private EmployeeService employeeService;
+    
+    @GetMapping("/employees")
+    public List<Employee> showAllEmployees() {
+        return employeeService.getAllEmployees();
+    }
+    
+    @GetMapping("/employees/{id}")
+    public Employee getEmployee(@PathVariable int id) {
+        Employee employee = employeeService.getEmployee(id);
+        if (employee == null) {
+            throw new NoSuchEmployeeException("Employee ID not found - " + id);
+        }
+        return employee;
+    }
+}
+```
+
+#### 2. Exception Handling
+
+```java
+@ControllerAdvice
+public class EmployeeGlobalExceptionHandler {
+    
+    @ExceptionHandler
+    public ResponseEntity<EmployeeIncorrectData> handleException(
+            NoSuchEmployeeException exception) {
+        EmployeeIncorrectData data = new EmployeeIncorrectData();
+        data.setInfo(exception.getMessage());
+        
+        return new ResponseEntity<>(data, HttpStatus.NOT_FOUND);
+    }
+    
+    @ExceptionHandler
+    public ResponseEntity<EmployeeIncorrectData> handleException(
+            Exception exception) {
+        EmployeeIncorrectData data = new EmployeeIncorrectData();
+        data.setInfo("Internal Server Error");
+        
+        return new ResponseEntity<>(data, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+```
+
+### Client-Side Implementation
+
+#### 1. REST Client Configuration
+
+```java
+@Configuration
+@ComponentScan("com.philipnerubenko.spring.rest")
+public class MyConfig {
+    
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
+```
+
+#### 2. Communication Service
+
+```java
+@Component
+public class Communication {
+    
+    @Autowired
+    private RestTemplate restTemplate;
+    private final String URL = "http://localhost:8080/api/employees";
+    
+    public List<Employee> getAllEmployees() {
+        ResponseEntity<List<Employee>> responseEntity = 
+            restTemplate.exchange(URL, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<Employee>>() {});
+        
+        return responseEntity.getBody();
+    }
+    
+    public Employee getEmployee(int id) {
+        return restTemplate.getForObject(URL + "/" + id, Employee.class);
+    }
+    
+    public void saveEmployee(Employee employee) {
+        if (employee.getId() == 0) {
+            ResponseEntity<String> responseEntity = 
+                restTemplate.postForEntity(URL, employee, String.class);
+        } else {
+            restTemplate.put(URL, employee);
+        }
+    }
+    
+    public void deleteEmployee(int id) {
+        restTemplate.delete(URL + "/" + id);
+    }
+}
+```
+
+### Project Structure
+
+The REST implementation is organized in these projects:
+
+#### Server Side ([`spring_course_mvc_rest`](./spring_course_mvc_rest/)):
+- **Configuration**:
+  - Database and transaction configuration
+  - REST support setup
+
+- **Controllers**:
+  - REST endpoints
+  - Exception handlers
+  - Response formatting
+
+- **Service & DAO**:
+  - Business logic
+  - Data access
+  - Transaction management
+
+#### Client Side ([`spring_course_rest_client`](./spring_course_rest_client/)):
+- **Configuration** ([`configuration`](./spring_course_rest_client/src/main/java/com/philipnerubenko/spring/rest/configuration/)):
+  - [`MyConfig.java`](./spring_course_rest_client/src/main/java/com/philipnerubenko/spring/rest/configuration/MyConfig.java)
+
+- **Communication** ([`rest`](./spring_course_rest_client/src/main/java/com/philipnerubenko/spring/rest/)):
+  - [`Communication.java`](./spring_course_rest_client/src/main/java/com/philipnerubenko/spring/rest/Communication.java)
+  - [`App.java`](./spring_course_rest_client/src/main/java/com/philipnerubenko/spring/rest/App.java)
+
+### REST API Endpoints
+
+| HTTP Method | Endpoint | Description |
+|------------|----------|-------------|
+| GET | `/api/employees` | Get all employees |
+| GET | `/api/employees/{id}` | Get employee by ID |
+| POST | `/api/employees` | Create new employee |
+| PUT | `/api/employees` | Update employee |
+| DELETE | `/api/employees/{id}` | Delete employee |
+
+### Example Usage
+
+#### Server Response Format
+
+```json
+{
+    "id": 1,
+    "name": "John",
+    "surname": "Doe",
+    "department": "IT",
+    "salary": 1000
+}
+```
+
+#### Error Response Format
+
+```json
+{
+    "info": "Employee ID not found - 100"
+}
+```
+
+### Key Features
+
+1. **RESTful Architecture**
+   - Stateless communication
+   - Resource-based URLs
+   - HTTP method semantics
+
+2. **Exception Handling**
+   - Global exception handler
+   - Custom error responses
+   - HTTP status codes
+
+3. **Client Implementation**
+   - RestTemplate configuration
+   - Type-safe requests
+   - Response handling
+
+4. **JSON Processing**
+   - Automatic serialization/deserialization
+   - Content negotiation
+   - Data validation
 
 <div align="right">
     <b><a href="#contents">↥ Back to Contents</a></b>
