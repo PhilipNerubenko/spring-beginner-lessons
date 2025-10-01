@@ -8,6 +8,8 @@
 4. [Lesson 4: Spring MVC Fundamentals](#lesson-4-spring-mvc-fundamentals)
 5. [Lesson 5: Spring MVC + Hibernate + AOP Integration](#lesson-5-spring-mvc--hibernate--aop-integration)
 6. [Lesson 6: Spring REST API Development](#lesson-6-spring-rest-api-development)
+7. [Lesson 7: Spring Security Fundamentals](#lesson-7-spring-security-fundamentals)
+8. [Lesson 8: Spring Boot & Spring Data JPA](#lesson-8-spring-boot--spring-data-jpa)
 
 ## Lesson 1: Spring Bean Configuration
 
@@ -1122,6 +1124,186 @@ protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
 - `{noop}` means no encoding (not recommended for production).
 - Use only for testing and demonstrations.
+
+<div align="right">
+    <b><a href="#contents">↥ Back to Contents</a></b>
+</div>
+
+## Lesson 8: Spring Boot & Spring Data JPA
+
+This lesson covers Spring Boot fundamentals and different ways to build REST APIs:
+
+- Spring Boot auto-configuration
+- Spring Data JPA repositories
+- Spring Data REST
+- Spring Boot Actuator
+- Different approaches to building REST APIs
+
+### Key Concepts
+
+| Concept | Purpose | Example |
+|---------|---------|---------|
+| Spring Boot | Simplified Spring setup | `@SpringBootApplication` |
+| Spring Data JPA | JPA repository abstraction | `JpaRepository` |
+| Spring Data REST | Automatic REST endpoints | `@RepositoryRestResource` |
+| Actuator | Application monitoring | `/actuator/health` |
+
+### Implementation Approaches
+
+#### 1. Spring Boot REST with Standard DAO
+
+```java
+// Standard Controller approach
+@RestController
+@RequestMapping("/api")
+public class MyRESTController {
+    
+    @Autowired
+    private EmployeeService employeeService;
+    
+    @GetMapping("/employees")
+    public List<Employee> showAllEmployees() {
+        return employeeService.getAllEmployees();
+    }
+}
+
+// DAO Implementation
+@Repository
+public class EmployeeDAOImpl implements EmployeeDAO {
+    
+    @Autowired
+    private EntityManager entityManager;
+    
+    @Override
+    public List<Employee> getAllEmployees() {
+        Query query = entityManager.createQuery("from Employee");
+        List<Employee> allEmployees = query.getResultList();
+        return allEmployees;
+    }
+}
+```
+
+#### 2. Spring Data JPA Approach
+
+```java
+// Repository Interface
+public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
+    // Spring Data JPA automatically implements basic CRUD operations
+    
+    // Custom query method
+    List<Employee> findAllByName(String name);
+}
+
+// Service Implementation
+@Service
+public class EmployeeServiceImpl implements EmployeeService {
+    
+    @Autowired
+    private EmployeeRepository employeeRepository;
+    
+    @Override
+    public List<Employee> getAllEmployees() {
+        return employeeRepository.findAll();
+    }
+}
+```
+
+#### 3. Spring Data REST Approach
+
+```java
+@RepositoryRestResource(path = "employees")
+public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
+    // Automatically creates REST endpoints:
+    // GET /employees
+    // GET /employees/{id}
+    // POST /employees
+    // PUT /employees/{id}
+    // DELETE /employees/{id}
+}
+```
+
+### Project Structure
+
+The Spring Boot implementation is organized in three separate projects:
+
+#### 1. Standard Spring Boot REST ([`springboot_rest`](./springboot_rest/)):
+- **Controller**: [`MyRESTController.java`](./springboot_rest/src/main/java/com/philipnerubenko/spring/springboot/springboot_rest/controller/MyRESTController.java)
+- **Service**: [`EmployeeServiceImpl.java`](./springboot_rest/src/main/java/com/philipnerubenko/spring/springboot/springboot_rest/service/EmployeeServiceImpl.java)
+- **DAO**: [`EmployeeDAOImpl.java`](./springboot_rest/src/main/java/com/philipnerubenko/spring/springboot/springboot_rest/dao/EmployeeDAOImpl.java)
+
+#### 2. Spring Data JPA ([`spring_data_jpa`](./spring_data_jpa/)):
+- **Controller**: [`MyRESTController.java`](./spring_data_jpa/src/main/java/com/philipnerubenko/spring/springboot/spring_data_jpa/controller/MyRESTController.java)
+- **Repository**: [`EmployeeRepository.java`](./spring_data_jpa/src/main/java/com/philipnerubenko/spring/springboot/spring_data_jpa/dao/EmployeeRepository.java)
+- **Service**: [`EmployeeServiceImpl.java`](./spring_data_jpa/src/main/java/com/philipnerubenko/spring/springboot/spring_data_jpa/service/EmployeeServiceImpl.java)
+
+#### 3. Spring Data REST ([`spring_data_rest`](./spring_data_rest/)):
+- **Repository**: [`EmployeeRepository.java`](./spring_data_rest/src/main/java/com/philipnerubenko/spring/springboot/spring_data_rest/dao/EmployeeRepository.java)
+- **Entity**: [`Employee.java`](./spring_data_rest/src/main/java/com/philipnerubenko/spring/springboot/spring_data_rest/entity/Employee.java)
+
+### Configuration
+
+#### application.properties
+
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:mysql://localhost:3306/my_db?useSSL=false&serverTimezone=UTC
+spring.datasource.username=bestuser
+spring.datasource.password=bestuser
+
+# Spring Data REST Configuration
+spring.data.rest.base-path=/api
+spring.data.rest.default-page-size=20
+
+# Actuator Configuration
+management.endpoints.web.exposure.include=*
+management.endpoint.health.show-details=always
+```
+
+### Spring Boot Actuator
+
+Actuator provides production-ready features for monitoring and managing your application:
+
+#### 1. Enable Actuator
+
+Add to `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+#### 2. Available Endpoints
+
+| Endpoint | Description | Example Response |
+|----------|-------------|-----------------|
+| `/actuator/health` | Application health | `{"status":"UP"}` |
+| `/actuator/info` | Application info | Custom information |
+| `/actuator/metrics` | Metrics data | JVM and custom metrics |
+| `/actuator/env` | Environment properties | Configuration properties |
+
+#### 3. Custom Health Indicator
+
+```java
+@Component
+public class CustomHealthIndicator implements HealthIndicator {
+    @Override
+    public Health health() {
+        return Health.up()
+            .withDetail("customKey", "customValue")
+            .build();
+    }
+}
+```
+
+### Comparison of Approaches
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| Standard REST | Full control, customizable | More boilerplate code |
+| Spring Data JPA | Less code, standard operations | Limited customization |
+| Spring Data REST | Minimal code, HATEOAS support | Less control over endpoints |
 
 <div align="right">
     <b><a href="#contents">↥ Back to Contents</a></b>
