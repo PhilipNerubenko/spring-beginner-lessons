@@ -749,22 +749,22 @@ public class LoggingAspect {
 
 The integrated implementation is organized in these packages:
 
-- **Controller** ([`controller`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/controller/)):
-  - [`EmployeeController.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/controller/EmployeeController.java)
+- **Controller** ([`controller`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/controller/)):
+  - [`EmployeeController.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/controller/EmployeeController.java)
 
-- **Service** ([`service`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/service/)):
-  - [`EmployeeService.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/service/EmployeeService.java)
-  - [`EmployeeServiceImpl.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/service/EmployeeServiceImpl.java)
+- **Service** ([`service`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/service/)):
+  - [`EmployeeService.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/service/EmployeeService.java)
+  - [`EmployeeServiceImpl.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/service/EmployeeServiceImpl.java)
 
-- **DAO** ([`dao`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/dao/)):
-  - [`EmployeeDAO.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/dao/EmployeeDAO.java)
-  - [`EmployeeDAOImpl.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/dao/EmployeeDAOImpl.java)
+- **DAO** ([`dao`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/dao/)):
+  - [`EmployeeDAO.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/dao/EmployeeDAO.java)
+  - [`EmployeeDAOImpl.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/dao/EmployeeDAOImpl.java)
 
-- **Entity** ([`entity`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/entity/)):
-  - [`Employee.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/entity/Employee.java)
+- **Entity** ([`entity`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/entity/)):
+  - [`Employee.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/entity/Employee.java)
 
-- **Aspect** ([`aspect`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/aspect/)):
-  - [`LoggingAspect.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/aspect/LoggingAspect.java)
+- **Aspect** ([`aspect`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/aspect/)):
+  - [`LoggingAspect.java`](./spring_course_mvc_hibernate_aop/src/main/java/com/philipnerubenko/spring/mvc_hibernate_aop/aspect/LoggingAspect.java)
 
 ### Key Features
 
@@ -998,6 +998,130 @@ The REST implementation is organized in these projects:
    - Automatic serialization/deserialization
    - Content negotiation
    - Data validation
+
+<div align="right">
+    <b><a href="#contents">↥ Back to Contents</a></b>
+</div>
+
+## Lesson 7: Spring Security Fundamentals
+
+This lesson covers web application security with Spring Security:
+
+- Security configuration and initialization
+- Role-based access control (HR, MANAGER, EMPLOYEE)
+- Form login and logout
+- Securing controllers and JSP views
+- Password encoding and storage
+
+### Key Concepts
+
+| Concept           | Purpose                        | Example                        |
+|-------------------|-------------------------------|--------------------------------|
+| SecurityConfig    | Security configuration         | `@EnableWebSecurity`           |
+| WebInitializer    | Filter initialization          | `AbstractSecurityWebApplicationInitializer` |
+| Role-based Access | Restrict access by roles       | `hasRole('HR')`                |
+| Form Login        | Authentication via form        | `/login`                       |
+| PasswordEncoder   | Password hashing               | `BCryptPasswordEncoder`        |
+
+### Security Configuration Example
+
+```java
+@Configuration
+@EnableWebSecurity
+public class MySecurityConfig extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+            .antMatchers("/").hasAnyRole("EMPLOYEE", "HR", "MANAGER")
+            .antMatchers("/hr_info/**").hasRole("HR")
+            .antMatchers("/manager_info/**").hasRole("MANAGER")
+            .and().formLogin().permitAll()
+            .and().logout().permitAll();
+    }
+}
+```
+
+### Security Initialization
+
+```java
+public class MySecurityInitializer extends AbstractSecurityWebApplicationInitializer {
+    // Registers springSecurityFilterChain automatically
+}
+```
+
+### Controller Example
+
+```java
+@Controller
+public class MyController {
+    @RequestMapping("/")
+    public String showAllEmployees() {
+        return "view_for_all_employees";
+    }
+
+    @RequestMapping("/hr_info")
+    public String showHRInfo() {
+        return "view_for_hr";
+    }
+
+    @RequestMapping("/manager_info")
+    public String showManagerInfo() {
+        return "view_for_managers";
+    }
+}
+```
+
+### JSP View Examples
+
+- [`view_for_all_employees.jsp`](./spring_course_security/src/main/webapp/WEB-INF/view/view_for_all_employees.jsp)
+- [`view_for_hr.jsp`](./spring_course_security/src/main/webapp/WEB-INF/view/view_for_hr.jsp)
+- [`view_for_managers.jsp`](./spring_course_security/src/main/webapp/WEB-INF/view/view_for_managers.jsp)
+
+### Project Structure
+
+- **Configuration** ([`configuration`](./spring_course_security/src/main/java/com/philipnerubenko/spring/security/configuration/)):
+  - [`MyConfig.java`](./spring_course_security/src/main/java/com/philipnerubenko/spring/security/configuration/MyConfig.java)
+  - [`MySecurityConfig.java`](./spring_course_security/src/main/java/com/philipnerubenko/spring/security/configuration/MySecurityConfig.java)
+  - [`MySecurityInitializer.java`](./spring_course_security/src/main/java/com/philipnerubenko/spring/security/configuration/MySecurityInitializer.java)
+  - [`MyWebInitializer.java`](./spring_course_security/src/main/java/com/philipnerubenko/spring/security/configuration/MyWebInitializer.java)
+- **Controllers** ([`controller`](./spring_course_security/src/main/java/com/philipnerubenko/spring/security/controller/)):
+  - [`MyController.java`](./spring_course_security/src/main/java/com/philipnerubenko/spring/security/controller/MyController.java)
+- **JSP Views** ([`view`](./spring_course_security/src/main/webapp/WEB-INF/view/)):
+  - `view_for_all_employees.jsp`, `view_for_hr.jsp`, `view_for_managers.jsp`
+
+### Password Encoding
+
+#### BCrypt
+
+Spring Security supports password hashing with BCrypt:
+
+```java
+@Bean
+public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+}
+```
+
+- BCrypt adds salt and makes brute-force attacks harder.
+- To store a password:  
+  `user.setPassword(passwordEncoder.encode(rawPassword));`
+- To verify a password:  
+  `passwordEncoder.matches(rawPassword, encodedPassword);`
+
+#### {noop} — No Encoding
+
+For demo purposes, you can use `{noop}` to store passwords in plain text:
+
+```java
+@Override
+protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    auth.inMemoryAuthentication()
+        .withUser("user").password("{noop}password").roles("EMPLOYEE");
+}
+```
+
+- `{noop}` means no encoding (not recommended for production).
+- Use only for testing and demonstrations.
 
 <div align="right">
     <b><a href="#contents">↥ Back to Contents</a></b>
