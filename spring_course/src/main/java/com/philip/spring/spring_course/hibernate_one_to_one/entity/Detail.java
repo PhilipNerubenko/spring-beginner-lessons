@@ -12,74 +12,68 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "details")
 public class Detail {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private int id;
-    
-    @Column(name = "city")
-    private String city;
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "id") private int id;
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
-    
-    @Column(name = "email")
-    private String email;
+  @Column(name = "city") private String city;
 
-    @OneToOne(mappedBy = "empDetail", cascade = {CascadeType.PERSIST, CascadeType.REFRESH})
-    private Employee employee;
+  @Column(name = "phone_number") private String phoneNumber;
 
-    public Detail() {
-    }
+  @Column(name = "email") private String email;
 
-    public Detail(String city, String phoneNumber, String email) {
-        this.city = city;
-        this.phoneNumber = phoneNumber;
-        this.email = email;
-    }
+  @OneToOne(mappedBy = "empDetail", cascade = {CascadeType.PERSIST, CascadeType.REFRESH})
+  private Employee employee;
 
-    public int getId() {
-        return id;
-    }
+  public Detail() {}
 
-    public void setId(int id) {
-        this.id = id;
-    }
+  public Detail(String city, String phoneNumber, String email) {
+    this.city = city;
+    this.phoneNumber = phoneNumber;
+    this.email = email;
+  }
 
-    public String getCity() {
-        return city;
-    }
+  public int getId() {
+    return id;
+  }
 
-    public void setCity(String city) {
-        this.city = city;
-    }
+  public void setId(int id) {
+    this.id = id;
+  }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
+  public String getCity() {
+    return city;
+  }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
+  public void setCity(String city) {
+    this.city = city;
+  }
 
-    public String getEmail() {
-        return email;
-    }
+  public String getPhoneNumber() {
+    return phoneNumber;
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  public void setPhoneNumber(String phoneNumber) {
+    this.phoneNumber = phoneNumber;
+  }
 
-    @Override
-    public String toString() {
-        return "Detail [id=" + id + ", city=" + city + ", phoneNumber=" + phoneNumber + ", email=" + email + "]";
-    }
+  public String getEmail() {
+    return email;
+  }
 
-    public Employee getEmployee() {
-        return employee;
-    }
+  public void setEmail(String email) {
+    this.email = email;
+  }
 
-    public void setEmployee(Employee employee) {
-        this.employee = employee;
-    }
+  @Override
+  public String toString() {
+    return "Detail [id=" + id + ", city=" + city + ", phoneNumber=" + phoneNumber
+        + ", email=" + email + "]";
+  }
+
+  public Employee getEmployee() {
+    return employee;
+  }
+
+  public void setEmployee(Employee employee) {
+    this.employee = employee;
+  }
 }

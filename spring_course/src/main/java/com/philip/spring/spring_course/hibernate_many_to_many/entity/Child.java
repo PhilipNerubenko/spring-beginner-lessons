@@ -1,8 +1,5 @@
 package com.philip.spring.spring_course.hibernate_many_to_many.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,80 +10,72 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "children")
 public class Child {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private int id;
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "id") private int id;
 
-    @Column(name = "name")
-    private String firstName;
+  @Column(name = "name") private String firstName;
 
-    @Column(name = "age")
-    private int age;
+  @Column(name = "age") private int age;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
-    @JoinTable(
-        name = "child_section",
-        joinColumns = @JoinColumn(name = "child_id"),
-        inverseJoinColumns = @JoinColumn(name = "section_id")
-    )
-    private List<Section> sections;
+  @ManyToMany(
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+  @JoinTable(name = "child_section", joinColumns = @JoinColumn(name = "child_id"),
+      inverseJoinColumns = @JoinColumn(name = "section_id"))
+  private List<Section> sections;
 
-    public Child() {
+  public Child() {}
+
+  public Child(String firstName, int age) {
+    this.firstName = firstName;
+    this.age = age;
+  }
+
+  public void addSectionToChild(Section section) {
+    if (sections == null) {
+      sections = new ArrayList<>();
     }
+    sections.add(section);
+  }
 
-    public Child(String firstName, int age) {
-        this.firstName = firstName;
-        this.age = age;
-    }
+  public int getId() {
+    return id;
+  }
 
-    public void addSectionToChild(Section section) {
-        if (sections == null) {
-            sections = new ArrayList<>();
-        }
-        sections.add(section);
-    }
+  public void setId(int id) {
+    this.id = id;
+  }
 
-    public int getId() {
-        return id;
-    }
+  public String getFirstName() {
+    return firstName;
+  }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
 
-    public String getFirstName() {
-        return firstName;
-    }
+  public int getAge() {
+    return age;
+  }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
+  public void setAge(int age) {
+    this.age = age;
+  }
 
-    public int getAge() {
-        return age;
-    }
+  public List<Section> getSections() {
+    return sections;
+  }
 
-    public void setAge(int age) {
-        this.age = age;
-    }
+  public void setSections(List<Section> sections) {
+    this.sections = sections;
+  }
 
-    public List<Section> getSections() {
-        return sections;
-    }
-
-    public void setSections(List<Section> sections) {
-        this.sections = sections;
-    }
-
-    @Override
-    public String toString() {
-        return "Child [id=" + id + ", firstName=" + firstName + ", age=" + age + "]";
-    }
-    
+  @Override
+  public String toString() {
+    return "Child [id=" + id + ", firstName=" + firstName + ", age=" + age + "]";
+  }
 }
